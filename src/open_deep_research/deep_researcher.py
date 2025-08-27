@@ -54,7 +54,7 @@ from open_deep_research.utils import (
 
 # Initialize a configurable model that we will use throughout the agent
 configurable_model = init_chat_model(
-    configurable_fields=("model", "max_tokens", "api_key"),
+    configurable_fields=("model", "max_tokens", "aws_access_key_id", "aws_secret_access_key", "region_name")
 )
 
 async def clarify_with_user(state: AgentState, config: RunnableConfig) -> Command[Literal["write_research_brief", "__end__"]]:
@@ -81,7 +81,10 @@ async def clarify_with_user(state: AgentState, config: RunnableConfig) -> Comman
     model_config = {
         "model": configurable.research_model,
         "max_tokens": configurable.research_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.research_model, config),
+        # "api_key": get_api_key_for_model(configurable.research_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.research_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.research_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.research_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
     
@@ -98,7 +101,9 @@ async def clarify_with_user(state: AgentState, config: RunnableConfig) -> Comman
         messages=get_buffer_string(messages), 
         date=get_today_str()
     )
+
     response = await clarification_model.ainvoke([HumanMessage(content=prompt_content)])
+    print("clarification response:", response)
     
     # Step 4: Route based on clarification analysis
     if response.need_clarification:
@@ -134,7 +139,10 @@ async def write_research_brief(state: AgentState, config: RunnableConfig) -> Com
     research_model_config = {
         "model": configurable.research_model,
         "max_tokens": configurable.research_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.research_model, config),
+        # "api_key": get_api_key_for_model(configurable.research_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.research_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.research_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.research_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
     
@@ -194,7 +202,10 @@ async def supervisor(state: SupervisorState, config: RunnableConfig) -> Command[
     research_model_config = {
         "model": configurable.research_model,
         "max_tokens": configurable.research_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.research_model, config),
+        # "api_key": get_api_key_for_model(configurable.research_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.research_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.research_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.research_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
     
@@ -392,7 +403,10 @@ async def researcher(state: ResearcherState, config: RunnableConfig) -> Command[
     research_model_config = {
         "model": configurable.research_model,
         "max_tokens": configurable.research_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.research_model, config),
+        # "api_key": get_api_key_for_model(configurable.research_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.research_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.research_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.research_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
     
@@ -527,7 +541,10 @@ async def compress_research(state: ResearcherState, config: RunnableConfig):
     synthesizer_model = configurable_model.with_config({
         "model": configurable.compression_model,
         "max_tokens": configurable.compression_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.compression_model, config),
+        # "api_key": get_api_key_for_model(configurable.compression_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.compression_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.compression_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.compression_model, config)[2],
         "tags": ["langsmith:nostream"]
     })
     
@@ -627,7 +644,10 @@ async def final_report_generation(state: AgentState, config: RunnableConfig):
     writer_model_config = {
         "model": configurable.final_report_model,
         "max_tokens": configurable.final_report_model_max_tokens,
-        "api_key": get_api_key_for_model(configurable.final_report_model, config),
+        # "api_key": get_api_key_for_model(configurable.final_report_model, config),
+        "aws_access_key_id": get_api_key_for_model(configurable.final_report_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.final_report_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.final_report_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
     

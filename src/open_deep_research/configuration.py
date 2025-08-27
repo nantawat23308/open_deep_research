@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 
+MODEL_NAME = "bedrock_converse:us.meta.llama3-3-70b-instruct-v1:0" # "google_genai:gemini-2.5-pro" # bedrock_converse:us.meta.llama3-3-70b-instruct-v1:0
 
 class SearchAPI(Enum):
     """Enumeration of available search API providers."""
@@ -52,11 +53,11 @@ class Configuration(BaseModel):
         }
     )
     allow_clarification: bool = Field(
-        default=True,
+        default=False,
         metadata={
             "x_oap_ui_config": {
                 "type": "boolean",
-                "default": True,
+                "default": False,
                 "description": "Whether to allow the researcher to ask the user clarifying questions before starting research"
             }
         }
@@ -119,11 +120,11 @@ class Configuration(BaseModel):
     )
     # Model Configuration
     summarization_model: str = Field(
-        default="openai:gpt-4.1-mini",
+        default=MODEL_NAME,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1-mini",
+                "default": MODEL_NAME,
                 "description": "Model for summarizing research results from Tavily search results"
             }
         }
@@ -151,31 +152,31 @@ class Configuration(BaseModel):
         }
     )
     research_model: str = Field(
-        default="openai:gpt-4.1",
+        default=MODEL_NAME, # "openai:gpt-4.1" bedrock/us.meta.llama3-1-70b-instruct-v1:0
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": MODEL_NAME,
                 "description": "Model for conducting research. NOTE: Make sure your Researcher Model supports the selected search API."
             }
         }
     )
     research_model_max_tokens: int = Field(
-        default=10000,
+        default=8192,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": 8192,
                 "description": "Maximum output tokens for research model"
             }
         }
     )
     compression_model: str = Field(
-        default="openai:gpt-4.1",
+        default=MODEL_NAME,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": MODEL_NAME,
                 "description": "Model for compressing research findings from sub-agents. NOTE: Make sure your Compression Model supports the selected search API."
             }
         }
@@ -191,21 +192,21 @@ class Configuration(BaseModel):
         }
     )
     final_report_model: str = Field(
-        default="openai:gpt-4.1",
+        default=MODEL_NAME,
         metadata={
             "x_oap_ui_config": {
                 "type": "text",
-                "default": "openai:gpt-4.1",
+                "default": MODEL_NAME,
                 "description": "Model for writing the final report from all research findings"
             }
         }
     )
     final_report_model_max_tokens: int = Field(
-        default=10000,
+        default=8192,
         metadata={
             "x_oap_ui_config": {
                 "type": "number",
-                "default": 10000,
+                "default": 8192,
                 "description": "Maximum output tokens for final report model"
             }
         }

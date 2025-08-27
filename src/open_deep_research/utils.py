@@ -32,7 +32,8 @@ from tavily import AsyncTavilyClient
 from open_deep_research.configuration import Configuration, SearchAPI
 from open_deep_research.prompts import summarize_webpage_prompt
 from open_deep_research.state import ResearchComplete, Summary
-
+from dotenv import load_dotenv
+load_dotenv()
 ##########################
 # Tavily Search Tool Utils
 ##########################
@@ -911,6 +912,11 @@ def get_api_key_for_model(model_name: str, config: RunnableConfig):
             return os.getenv("ANTHROPIC_API_KEY")
         elif model_name.startswith("google"):
             return os.getenv("GOOGLE_API_KEY")
+        elif model_name.startswith("bedrock"):
+            # print("Using Bedrock model - ensure AWS credentials are set in environment variables")
+            # print("BEDROCK models require AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION to be set")
+            # print(os.getenv("AWS_ACCESS_KEY_ID"), os.getenv("AWS_SECRET_ACCESS_KEY"), os.getenv("AWS_REGION"))
+            return os.getenv("AWS_ACCESS_KEY_ID"), os.getenv("AWS_SECRET_ACCESS_KEY"), os.getenv("AWS_REGION")
         return None
 
 def get_tavily_api_key(config: RunnableConfig):
