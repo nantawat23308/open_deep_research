@@ -6,8 +6,8 @@ from typing import Any, List, Optional
 
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
-
-MODEL_NAME = "bedrock_converse:us.meta.llama3-3-70b-instruct-v1:0" # "google_genai:gemini-2.5-pro" # bedrock_converse:us.meta.llama3-3-70b-instruct-v1:0
+# us.meta.llama4-maverick-17b-instruct-v1:0
+MODEL_NAME = "bedrock_converse:us.meta.llama4-maverick-17b-instruct-v1:0" # "google_genai:gemini-2.5-pro" # bedrock_converse:us.meta.llama3-3-70b-instruct-v1:0
 
 class SearchAPI(Enum):
     """Enumeration of available search API providers."""

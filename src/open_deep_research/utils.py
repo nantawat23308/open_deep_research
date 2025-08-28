@@ -87,7 +87,10 @@ async def tavily_search(
     summarization_model = init_chat_model(
         model=configurable.summarization_model,
         max_tokens=configurable.summarization_model_max_tokens,
-        api_key=model_api_key,
+        **{"aws_access_key_id": get_api_key_for_model(configurable.research_model, config)[0],
+        "aws_secret_access_key": get_api_key_for_model(configurable.research_model, config)[1],
+        "region_name": get_api_key_for_model(configurable.research_model, config)[2],},
+        # api_key=model_api_key,
         tags=["langsmith:nostream"]
     ).with_structured_output(Summary).with_retry(
         stop_after_attempt=configurable.max_structured_output_retries

@@ -538,35 +538,52 @@ async def compress_research(state: ResearcherState, config: RunnableConfig):
     """
     # Step 1: Configure the compression model
     configurable = Configuration.from_runnable_config(config)
-    synthesizer_model = configurable_model.with_config({
+    configure = {
         "model": configurable.compression_model,
         "max_tokens": configurable.compression_model_max_tokens,
         # "api_key": get_api_key_for_model(configurable.compression_model, config),
         "aws_access_key_id": get_api_key_for_model(configurable.compression_model, config)[0],
         "aws_secret_access_key": get_api_key_for_model(configurable.compression_model, config)[1],
         "region_name": get_api_key_for_model(configurable.compression_model, config)[2],
-        "tags": ["langsmith:nostream"]
-    })
+        "tags": ["langsmith:nostream"],
+        "disable_streaming": True
+    }
+    tools = await get_all_tools(config)
+    if len(tools) == 0:
+        raise ValueError(
+            "No tools found to conduct research: Please configure either your "
+            "search API or add MCP tools to your configuration."
+        )
+
+    configurable_model2 = init_chat_model(
+        configurable_fields=("model", "max_tokens", "aws_access_key_id", "aws_secret_access_key", "region_name", "disable_streaming")
+    )
+
+    synthesizer_model = configurable_model2.bind_tools(tools).with_config(configure)
     
     # Step 2: Prepare messages for compression
     researcher_messages = state.get("researcher_messages", [])
     
     # Add instruction to switch from research mode to compression mode
+    researcher_messages.append(AIMessage(content="acknowledged."))
     researcher_messages.append(HumanMessage(content=compress_research_simple_human_message))
     
     # Step 3: Attempt compression with retry logic for token limit issues
     synthesis_attempts = 0
     max_attempts = 3
-    
+    all_message = ""
     while synthesis_attempts < max_attempts:
         try:
             # Create system prompt focused on compression task
             compression_prompt = compress_research_system_prompt.format(date=get_today_str())
             messages = [SystemMessage(content=compression_prompt)] + researcher_messages
-            
+            # toolConfig
             # Execute compression
+
+            all_message += str(messages)
+            print("Messsage")
+            print(messages)
             response = await synthesizer_model.ainvoke(messages)
-            
             # Extract raw notes from all tool and AI messages
             raw_notes_content = "\n".join([
                 str(message.content) 
