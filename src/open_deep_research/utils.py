@@ -41,6 +41,9 @@ TAVILY_SEARCH_DESCRIPTION = (
     "A search engine optimized for comprehensive, accurate, and trusted results. "
     "Useful for when you need to answer questions about current events."
 )
+
+_client = None
+
 @tool(description=TAVILY_SEARCH_DESCRIPTION)
 async def tavily_search(
     queries: List[str],
@@ -580,6 +583,7 @@ async def get_all_tools(config: RunnableConfig):
         List of all configured and available tools for research operations
     """
     # Start with core research tools
+    print("get tools")
     tools = [tool(ResearchComplete), think_tool]
     
     # Add configured search tools
@@ -593,12 +597,49 @@ async def get_all_tools(config: RunnableConfig):
         tool.name if hasattr(tool, "name") else tool.get("name", "web_search") 
         for tool in tools
     }
-    
+
     # Add MCP tools if configured
     mcp_tools = await load_mcp_tools(config, existing_tool_names)
     tools.extend(mcp_tools)
-    
+    print(len(tools))
+    # optional mcp
+    client = mcp_client_from_config()
+    mcp_tools_option = await client.get_tools()
+    tools = tools + mcp_tools_option
+
+    print(len(mcp_tools_option))
+    print(len(tools))
+
+    print("mcp tools optional")
+    print(mcp_tools_option)
     return tools
+
+def mcp_client_from_config() -> Optional[MultiServerMCPClient]:
+    """Create an MCP client from the given configuration if valid.
+
+    Returns:
+        Configured MultiServerMCPClient instance, or None if configuration is invalid
+    """
+
+    mcp_server_config = {
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "@playwright/mcp@latest"
+            ],
+            "transport": "stdio"  # Communication via stdin/stdout
+        }
+    }
+
+    try:
+        # Initialize and return the MCP client
+        global _client
+        if _client is None:
+            _client = MultiServerMCPClient(mcp_server_config)
+        return _client
+    except Exception:
+        # If client initialization fails, return None
+        return None
 
 def get_notes_from_tool_calls(messages: list[MessageLikeRepresentation]):
     """Extract notes from tool call messages."""

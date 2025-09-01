@@ -581,8 +581,8 @@ async def compress_research(state: ResearcherState, config: RunnableConfig):
             # Execute compression
 
             all_message += str(messages)
-            print("Messsage")
-            print(messages)
+            # print("Messsage")
+            # print(messages)
             response = await synthesizer_model.ainvoke(messages)
             # Extract raw notes from all tool and AI messages
             raw_notes_content = "\n".join([
