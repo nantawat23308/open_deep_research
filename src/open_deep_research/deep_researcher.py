@@ -409,13 +409,20 @@ async def researcher(state: ResearcherState, config: RunnableConfig) -> Command[
         "region_name": get_api_key_for_model(configurable.research_model, config)[2],
         "tags": ["langsmith:nostream"]
     }
-    
+
+    tool_available = "\n\n".join([
+        f"- **{tool.name}**: {tool.description}"
+        for tool in tools]
+    )
+    print(tool_available)
+
     # Prepare system prompt with MCP context if available
     researcher_prompt = research_system_prompt.format(
         mcp_prompt=configurable.mcp_prompt or "", 
-        date=get_today_str()
+        date=get_today_str(),
+        tool_available_options=tool_available
     )
-    
+
     # Configure model with tools, retry logic, and settings
     research_model = (
         configurable_model
@@ -423,7 +430,7 @@ async def researcher(state: ResearcherState, config: RunnableConfig) -> Command[
         .with_retry(stop_after_attempt=configurable.max_structured_output_retries)
         .with_config(research_model_config)
     )
-    
+
     # Step 3: Generate researcher response with system context
     messages = [SystemMessage(content=researcher_prompt)] + researcher_messages
     response = await research_model.ainvoke(messages)

@@ -82,7 +82,7 @@ class Configuration(BaseModel):
     )
     # Research Configuration
     search_api: SearchAPI = Field(
-        default=SearchAPI.TAVILY,
+        default=SearchAPI.TAVILY, # SearchAPI.TAVILY,
         metadata={
             "x_oap_ui_config": {
                 "type": "select",

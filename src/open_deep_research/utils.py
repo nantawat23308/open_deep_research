@@ -572,6 +572,71 @@ async def get_search_tool(search_api: SearchAPI):
         
     # Default fallback for unknown search API types
     return []
+
+@tool()
+def brave_search(query: str) -> str:
+    """Perform a Brave search for the given query and return formatted results.
+
+    Args:
+        query: The search query string
+
+    Returns:
+        Formatted string containing top search results
+    """
+    from langchain_community.tools import BraveSearch
+
+    brave_tool = BraveSearch.from_api_key(api_key=os.getenv("BRAVE_API_KEY"))
+
+    return brave_tool.run(query)
+
+
+def gather_file_system(path: str, file_type: list | tuple = ("md",)) -> list[dict]:
+    """Recursively gather and format file system contents starting from the given path.
+
+    Args:
+        path: Root directory path to start gathering files from
+        file_type: List or tuple of file extensions to include (e.g., ["md", "txt"])
+    Returns:
+        Dictionary representing the file system structure and contents
+    """
+    if isinstance(file_type, str):
+        file_type = (file_type,)
+    from pathlib import Path
+    found_files = []
+    files_list_content = []
+    file_extension = tuple(f"*.{ext.lstrip('.')}" for ext in file_type)
+    start_dir = Path(path)
+    for file_type in file_extension:
+        found_files.extend(start_dir.rglob(file_type))
+    for file_path in found_files:
+        if file_path.is_file():
+            try:
+                content = read_file(str(file_path))
+                files_list_content.append({"file_path": str(file_path), "content": content})
+            except Exception as e:
+                print(f"Error reading file {file_path}: {e}")
+
+    return files_list_content
+
+
+def read_file(file_path: str) -> str | None:
+    if file_path.endswith(".md"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    elif file_path.endswith(".txt"):
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        raise ValueError(f"Unsupported file type: {file_path}")
+
+
+@tool(description="Retrieve information Available.")
+def gather_tools() -> list[dict]:
+    """Retrieve information Available."""
+    base_path = "/home/nantawat/Desktop/my_project/odr2/open_deep_research/research_doc"
+    information_dict = gather_file_system(path=base_path, file_type=["md", "txt"])
+    return information_dict
+
     
 async def get_all_tools(config: RunnableConfig):
     """Assemble complete toolkit including research, search, and MCP tools.
@@ -583,14 +648,18 @@ async def get_all_tools(config: RunnableConfig):
         List of all configured and available tools for research operations
     """
     # Start with core research tools
-    print("get tools")
-    tools = [tool(ResearchComplete), think_tool]
-    
+    tools = [
+        tool(ResearchComplete),
+        think_tool,
+        # brave_search,
+        gather_tools
+             ]
+
     # Add configured search tools
     configurable = Configuration.from_runnable_config(config)
-    search_api = SearchAPI(get_config_value(configurable.search_api))
-    search_tools = await get_search_tool(search_api)
-    tools.extend(search_tools)
+    # search_api = SearchAPI(get_config_value(configurable.search_api))
+    # search_tools = await get_search_tool(search_api)
+    # tools.extend(search_tools)
     
     # Track existing tool names to prevent conflicts
     existing_tool_names = {
@@ -601,17 +670,12 @@ async def get_all_tools(config: RunnableConfig):
     # Add MCP tools if configured
     mcp_tools = await load_mcp_tools(config, existing_tool_names)
     tools.extend(mcp_tools)
-    print(len(tools))
+
     # optional mcp
-    client = mcp_client_from_config()
-    mcp_tools_option = await client.get_tools()
-    tools = tools + mcp_tools_option
+    # client = mcp_client_from_config()
+    # mcp_tools_option = await client.get_tools()
+    # tools = tools + mcp_tools_option
 
-    print(len(mcp_tools_option))
-    print(len(tools))
-
-    print("mcp tools optional")
-    print(mcp_tools_option)
     return tools
 
 def mcp_client_from_config() -> Optional[MultiServerMCPClient]:
@@ -625,7 +689,8 @@ def mcp_client_from_config() -> Optional[MultiServerMCPClient]:
         "playwright": {
             "command": "npx",
             "args": [
-                "@playwright/mcp@latest"
+                "@playwright/mcp@latest",
+                "--headless"
             ],
             "transport": "stdio"  # Communication via stdin/stdout
         }
